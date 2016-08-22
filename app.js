@@ -30,18 +30,12 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer] });
 bot.dialog('/', intents);
 
 function getAnchorTexts(htmlStr) {
-    var div,
-        anchors,
-        i,
-        texts;
-    div = document.createElement('div');
-    div.innerHTML = htmlStr;
-    anchors = div.getElementsByTagName('a');
-    texts = [];
-    for (i = 0; i < anchors.length; i += 1) {
-        texts.push(anchors[i].text);
+    var match = /<a\s+[^>]*href="([^"]*)"[^>]*>(.*)<\/a>/i.exec(htmlStr);
+    if (!match) {
+        return htmlStr;
+    } else {
+        return match[2];
     }
-    return texts;
 }
 
 var guiid = function () {
@@ -130,10 +124,8 @@ bot.use({
     botbuilder: function (session, next) {
         var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
         if (!session.userData.user) {
-            var email = session.message.text;
-            if (getAnchorTexts(email).length) {
-                email = getAnchorTexts(email)[0];
-            }
+            var email = getAnchorTexts(session.message.text);
+            //FIX SKYPE EMAIL ISSUE
             if (email && re.test(email)) {
                 if (user = Api.login(email)) {
                     session.userData.user = user;
@@ -207,7 +199,7 @@ bot.dialog('/eat_final', [function (session) {
                         .tap(builder.CardAction.showImage(session, plats[i]["photo"][0]["contentUrl"])),
                 ])
                 .buttons([
-                    builder.CardAction.imBack(session, plats[i]["guiid"], "Meet Ze Chief !")
+                    builder.CardAction.imBack(session, plats[i]["guiid"], "Meet Ze Chef !")
                 ])
         );
     }
