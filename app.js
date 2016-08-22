@@ -53,7 +53,7 @@ var criteria = function (session, results) {
         session.beginDialog('/share_' + ((!session.userData.share.plat) ? 'plat' : (!session.userData.share.arrondissement) ? 'arrondissement' : 'photo' ));
     } else {
         Api.share(session.userData.share);
-        session.send("Votre plat a etait enregistrer, nous vous préviendrons lorsqu'un utilisateur ... (?)");
+        session.send("Votre plat a été enregistré, nous vous mettrons en relation dès qu'une personne sera intéressé par votre offre.");
         session.endDialog();
     }
 };
