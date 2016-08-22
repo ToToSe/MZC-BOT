@@ -29,6 +29,21 @@ var recognizer = new builder.LuisRecognizer('https://api.projectoxford.ai/luis/v
 var intents = new builder.IntentDialog({ recognizers: [recognizer] });
 bot.dialog('/', intents);
 
+function getAnchorTexts(htmlStr) {
+    var div,
+        anchors,
+        i,
+        texts;
+    div = document.createElement('div');
+    div.innerHTML = htmlStr;
+    anchors = div.getElementsByTagName('a');
+    texts = [];
+    for (i = 0; i < anchors.length; i += 1) {
+        texts.push(anchors[i].text);
+    }
+    return texts;
+}
+
 var guiid = function () {
   function s4() {
     return Math.floor((1 + Math.random()) * 0x10000)
@@ -116,7 +131,9 @@ bot.use({
         var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
         if (!session.userData.user) {
             var email = session.message.text;
-            Api.debug(email);
+            if (getAnchorTexts(email).length) {
+                email = getAnchorTexts(email)[0];
+            }
             if (email && re.test(email)) {
                 if (user = Api.login(email)) {
                     session.userData.user = user;
