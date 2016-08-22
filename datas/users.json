@@ -1,10 +1,5 @@
 {
-    "djeb.sofiene@gmail.com": {
-        "id": "0",
-        "email": "djeb.sofiene@gmail.com",
-        "firstname": "Sofiene",
-        "lastname": "Djebali",
-        "arrondissement": "",
-        "feedbacks_pending": []
-    }
+    "djeb.sofiene@gmail.com":{"id":"0","email":"djeb.sofiene@gmail.com","firstname":"Sofiene","lastname":"Djebali","arrondissement":"","feedbacks_pending":[]},
+    "pierre@gmail.com":{"id":"1","email":"pierre@gmail.com","firstname":"Pierre","lastname":"Lagarde","arrondissement":"","feedbacks_pending":[]},
+    "laurence@gmail.com":{"id":"2","email":"laurence@gmail.com","firstname":"Laurence","lastname":"Kerjean","arrondissement":"","feedbacks_pending":[]}    
 }

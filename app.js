@@ -1,6 +1,9 @@
 var restify = require('restify');
 var builder = require('botbuilder');
 var Api = require('./api.js');
+var http = require('http');
+var request = require('sync-request');
+
 
 //=========================================================
 // Bot Setup
@@ -15,8 +18,8 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
   
 // Create chat bot
 var connector = new builder.ChatConnector({
-    appId: "f26df032-1c1a-4fdf-b457-ea1a55f11c3e",
-    appPassword: "6jHgDRj76QTzGhQVHZNYLBR"
+    appId: process.env.MICROSOFT_APP_ID,
+    appPassword: process.env.MICROSOFT_APP_PASSWORD
 });
 var bot = new builder.UniversalBot(connector);
 server.post('/api/messages', connector.listen());
@@ -112,6 +115,7 @@ bot.use({
         var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
         if (!session.userData.user) {
             var email = session.message.text;
+            Api.debug(email);
             if (email && re.test(email)) {
                 if (user = Api.login(email)) {
                     session.userData.user = user;
@@ -198,14 +202,52 @@ bot.dialog('/eat_final', [function (session) {
 function (session, results) {
     var action, item;
     var kvPair = results.response.entity.split(':');
-    var chief = Api.ChiefByPlatId(kvPair[1]);
+    var chief = Api.ChiefByPlatId(kvPair[0]);
     session.send('Bonjour ' + chief["firstname"] + ' / Bonjour ' + session.userData.user.firstname + ' Vous pouvez chater pour vous donner rendez vous.');
-    Api.FeedBackPending(kvPair[1], session.userData.user.email);
+    Api.FeedBackPending(kvPair[0], session.userData.user.email);
     session.endDialog();
 }]);
 
 bot.dialog('feedbacks', [function(session) {
     builder.Prompts.attachment(session, "Bienvenu " + session.userData.user.firstname + ", Le plat que tu as mangé hier était bon ? Tu peux te prendre en photo pour évaluer automatiquement ton appréciation");
 }, function(session, results) {
-    session.send(results.response[0]["contentUrl"]);
+        
+    var res = request('POST', 'https://api.projectoxford.ai/emotion/v1.0/recognize', {
+        json: { url: results.response[0]["contentUrl"] },
+        headers: {
+            'Content-Type': 'application/json',
+            'Ocp-Apim-Subscription-Key': '61b5012e969d43fca126a7f062e179d0'
+        }
+    });
+    var oxford = JSON.parse(res.getBody('utf8'));
+    var emotion = ['', 0];
+    
+    for (var key in oxford[0]['scores']) {
+        if (oxford[0]['scores'][key] > emotion[1]) {
+            emotion = [key, oxford[0]['scores'][key]]
+        }
+    }    
+
+    var feedback = null;
+
+    if (emotion[0] == "happiness") {
+        feedback = "Je vois que tu as été très satisfait j’informe le chef.";
+    } else {
+        feedback = "Je vois que tu as été insatisfait j’informe le chef.";
+    }
+    
+    Api.emptyFeedback(session.userData.user.email);
+    builder.Prompts.choice(session, feedback + " Tu recherches un plat aujourd’hui ?", ["Oui","Non"]);
+
+}, function(session, results) {
+    if (results.response.entity == "Oui") {
+        session.userData.eat = {
+            plat: null,
+            arrondissement: null,
+            final: null
+        };
+        criteria_search(session);
+    } else {
+        session.endDialog();
+    }
 }]);
