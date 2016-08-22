@@ -122,6 +122,10 @@ intents.matches('eat', [
 
 bot.use({
     botbuilder: function (session, next) {
+        if (session.message.text == "logout") {
+            session.userData.user = false;
+            session.endDialog();
+        }
         var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
         if (!session.userData.user) {
             var email = getAnchorTexts(session.message.text);
